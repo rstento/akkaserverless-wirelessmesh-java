@@ -1,0 +1,335 @@
+ package wirelessmesh.domain;
+
+ import com.google.protobuf.Empty;
+ import io.cloudstate.javasupport.EntityId;
+ import io.cloudstate.javasupport.eventsourced.CommandContext;
+ import io.cloudstate.javasupport.eventsourced.CommandHandler;
+ import io.cloudstate.javasupport.eventsourced.EventHandler;
+ import io.cloudstate.javasupport.eventsourced.EventSourcedEntity;
+
+ import domain.Devicedomain.*;
+ import service.Wirelessmeshservice.*;
+
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Optional;
+ import java.util.stream.Collectors;
+
+ /**
+  * A customer location entity.
+  *
+  * As an entity, I will be seeded with my current state upon loading and thereafter will completely serve the
+  * backend needs for a particular device. There is no practical limit to how many of these entities you can have,
+  * across the application cluster. Look at each instance of this entity as being roughly equivalent to a row in a
+  * database, only each one is completely addressable and in memory.
+  *
+  * Event sourcing was selected in order to have complete traceability into the behavior of devices for the purposes
+  * of security, analytics and simulation.
+  */
+ @EventSourcedEntity
+ public class CustomerLocation {
+
+     /**
+      * This section contains the private state variables necessary for this entity.
+      */
+
+     private String customerLocationId;
+
+     private boolean added = false;
+
+     private boolean removed = false;
+
+     private String accessToken = "";
+
+     List<Device> devices = new ArrayList<Device>();
+
+     /**
+      * Constructor.
+      * @param customerLocationId The entity id will be the customerLocationId, the unique key for this entity.
+      */
+     public CustomerLocation(@EntityId String customerLocationId) {
+         this.customerLocationId = customerLocationId;
+     }
+
+     /**
+      * This is the command handler for adding a customer location as defined in protobuf.
+      * @param addCustomerLocationCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Empty addCustomerLocation(AddCustomerLocationCommand addCustomerLocationCommand, CommandContext ctx) {
+         if (added) {
+             ctx.fail("Customer location already added");
+         }
+
+         ctx.emit(CustomerLocationAdded.newBuilder()
+                 .setCustomerLocationId(addCustomerLocationCommand.getCustomerLocationId())
+                 .setAccessToken(addCustomerLocationCommand.getAccessToken())
+                 .build());
+
+         return Empty.getDefaultInstance();
+     }
+
+     /**
+      * This is the event handler for adding a customer location. It is here we update current state due to
+      * successful storage to the eventlog.
+      *
+      * @param customerLocationAdded the event previously emitted in the command handler, now safely stored.
+      */
+     @EventHandler
+     public void customerLocationAdded(CustomerLocationAdded customerLocationAdded) {
+         this.added = true;
+         this.removed = false;
+         this.accessToken = customerLocationAdded.getAccessToken();
+     }
+
+     /**
+      * This is the command handler for removing a customer location as defined in protobuf.
+      * @param removeCustomerLocationCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Empty removeCustomerLocation(RemoveCustomerLocationCommand removeCustomerLocationCommand, CommandContext ctx) {
+         if (!added) {
+             ctx.fail("Customer location does not exist");
+         }
+         if (removed) {
+             ctx.fail("Customer location already removed");
+         }
+
+         ctx.emit(CustomerLocationRemoved.newBuilder()
+                 .setCustomerLocationId(removeCustomerLocationCommand.getCustomerLocationId())
+                 .build());
+
+         return Empty.getDefaultInstance();
+     }
+
+     /**
+      * This is the event handler for removing a customer location. It is here we update current state due to
+      * successful storage to the eventlog.
+      *
+      * @param customerLocationRemoved the event previously emitted in the command handler, now safely stored.
+      */
+     @EventHandler
+     public void customerLocationRemoved(CustomerLocationRemoved customerLocationRemoved) {
+         this.removed = true;
+         this.added = false;
+         devices = new ArrayList<Device>();
+     }
+
+     /**
+      * This is the command handler for activating a wirelessmesh device as defined in protobuf.
+      * @param activateDeviceCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Empty activateDevice(ActivateDeviceCommand activateDeviceCommand, CommandContext ctx) {
+         if (removed) {
+             ctx.fail("customerLocation does not exist.");
+         }
+
+         if (findDevice(activateDeviceCommand.getDeviceId()).isPresent()) {
+             ctx.fail("Device already activated");
+         }
+
+         ctx.emit(DeviceActivated.newBuilder()
+                 .setDeviceId(activateDeviceCommand.getDeviceId())
+                 .setCustomerLocationId(customerLocationId)
+                 .build());
+
+         return Empty.getDefaultInstance();
+     }
+
+     /**
+      * This is the event handler for activating a wirelessmesh device. It is here we update current state due to
+      * successful storage to the eventlog.
+      *
+      * @param deviceActivated the event previously emitted in the command handler, now safely stored.
+      */
+     @EventHandler
+     public void deviceActivated(DeviceActivated deviceActivated) {
+         devices.add(Device.newBuilder()
+                 .setDeviceId(deviceActivated.getDeviceId())
+                 .setCustomerLocationId(customerLocationId)
+                 .setActivated(true)
+                 .setNightlightOn(false)
+                 .build());
+     }
+
+     /**
+      * This is the command handler for removing a wirelessmesh device as defined in protobuf.
+      * @param removeDeviceCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Empty removeDevice(RemoveDeviceCommand removeDeviceCommand, CommandContext ctx) {
+         if (removed) {
+             ctx.fail("customerLocation does not exist.");
+         }
+
+         if (!findDevice(removeDeviceCommand.getDeviceId()).isPresent()) {
+             ctx.fail("Device does not exist");
+         }
+
+         ctx.emit(DeviceRemoved.newBuilder()
+                 .setDeviceId(removeDeviceCommand.getDeviceId())
+                 .setCustomerLocationId(customerLocationId).build());
+
+         return Empty.getDefaultInstance();
+     }
+
+     /**
+      * This is the event handler for removing a wirelessmesh device. It is here we update current state due to
+      * successful storage to the eventlog.
+      *
+      * @param deviceRemoved the event previously emitted in the command handler, now safely stored.
+      */
+     @EventHandler
+     public void deviceRemoved(DeviceRemoved deviceRemoved) {
+         devices = devices.stream().filter(d -> !d.getDeviceId().equals(deviceRemoved.getDeviceId()))
+                 .collect(Collectors.toList());
+     }
+
+     /**
+      * This is the command handler for assigning a wirelessmesh device to a room as defined in protobuf.
+      * @param assignRoomCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Empty assignRoom(AssignRoomCommand assignRoomCommand, CommandContext ctx) {
+         if (removed) {
+             ctx.fail("customerLocation does not exist.");
+         }
+
+         if (!findDevice(assignRoomCommand.getDeviceId()).isPresent()) {
+             ctx.fail("Device does not exist");
+         }
+
+         ctx.emit(RoomAssigned.newBuilder()
+                 .setDeviceId(assignRoomCommand.getDeviceId())
+                 .setCustomerLocationId(customerLocationId)
+                 .setRoom(assignRoomCommand.getRoom()).build());
+
+         return Empty.getDefaultInstance();
+     }
+
+     /**
+      * This is the event handler for assigning a wirelessmesh device to a room. It is here we update current state due to
+      * successful storage to the eventlog.
+      *
+      * @param roomAssigned the event previously emitted in the command handler, now safely stored.
+      */
+     @EventHandler
+     public void roomAssigned(RoomAssigned roomAssigned) {
+         Device old = findDevice(roomAssigned.getDeviceId()).get();
+         Device device = Device.newBuilder()
+                 .setDeviceId(old.getDeviceId())
+                 .setCustomerLocationId(customerLocationId)
+                 .setActivated(old.getActivated())
+                 .setRoom(roomAssigned.getRoom())
+                 .setNightlightOn(old.getNightlightOn())
+                 .build();
+
+         replaceDevice(device);
+     }
+
+     /**
+      * This is the command handler for toggling the wirelessmesh device nightlight as defined in protobuf.
+      * @param toggleNightlightCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Empty toggleNightlight(ToggleNightlightCommand toggleNightlightCommand, CommandContext ctx) throws IOException {
+         if (removed) {
+             ctx.fail("customerLocation does not exist.");
+         }
+
+         Optional<Device> deviceMaybe = findDevice(toggleNightlightCommand.getDeviceId());
+
+         if (!deviceMaybe.isPresent()) {
+             ctx.fail("Device does not exist");
+         }
+
+         // Note: we side effect here (turn on/off the nightlight) in the command handler, not in the event, since we
+         //       only want it to happen once and not during subsequent event handling if and when this entity reloads.
+         DeviceClient client = new DeviceClient();
+         client.toggleNightlight(accessToken, toggleNightlightCommand.getDeviceId());
+
+         ctx.emit(NightlightToggled.newBuilder()
+                 .setDeviceId(toggleNightlightCommand.getDeviceId())
+                 .setCustomerLocationId(customerLocationId)
+                 .setNightlightOn(!deviceMaybe.get().getNightlightOn()).build());
+
+         return Empty.getDefaultInstance();
+     }
+
+     /**
+      * This is the event handler for toggling the wirelessmesh device nightlight. It is here we update current state due to
+      * successful storage to the eventlog.
+      *
+      * @param nightlightToggled the event previously emitted in the command handler, now safely stored.
+      */
+     @EventHandler
+     public void nightlightToggled(NightlightToggled nightlightToggled) {
+         Device old = findDevice(nightlightToggled.getDeviceId()).get();
+         Device device = Device.newBuilder()
+                 .setDeviceId(old.getDeviceId())
+                 .setCustomerLocationId(customerLocationId)
+                 .setActivated(old.getActivated())
+                 .setRoom(old.getRoom())
+                 .setNightlightOn(nightlightToggled.getNightlightOn())
+                 .build();
+
+         replaceDevice(device);
+     }
+
+     /**
+      * This is the command handler geting the current state of the devices as defined in protobuf.
+      * @param getDevicesCommand the command message from protobuf
+      * @param ctx the application context
+      * @return Empty (unused)
+      */
+     @CommandHandler
+     public Devices getDevices(GetDevicesCommand getDevicesCommand, CommandContext ctx) {
+         if (removed || !added) {
+             ctx.fail("customerLocation does not exist.");
+         }
+
+         return Devices.newBuilder().addAllDevice(devices).build();
+     }
+
+     /**
+      * Helper function to find a device in the device collection.
+      */
+     private Optional<Device> findDevice(String deviceId) {
+         List<Device> filtered = devices.stream()
+                 .filter(d -> d.getDeviceId().equals(deviceId))
+                 .collect(Collectors.toList());
+
+         if (filtered.size() == 0) {
+             return Optional.empty();
+         }
+         else {
+             return Optional.of(filtered.get(0));
+         }
+     }
+
+     /**
+      * Helper function to replace the state of a given device within the device collection.
+      */
+     private void replaceDevice(Device device) {
+         List<Device> filtered = devices.stream()
+                 .filter(d -> !d.getDeviceId().equals(device.getDeviceId()))
+                 .collect(Collectors.toList());
+
+         filtered.add(device);
+         devices = filtered;
+     }
+ }
