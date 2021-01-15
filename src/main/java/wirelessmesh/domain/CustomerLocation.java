@@ -7,7 +7,7 @@
  import io.cloudstate.javasupport.eventsourced.EventHandler;
  import io.cloudstate.javasupport.eventsourced.EventSourcedEntity;
 
- import domain.Devicedomain.*;
+ import domain.Domain.*;
  import service.Wirelessmeshservice.*;
 
  import java.io.IOException;

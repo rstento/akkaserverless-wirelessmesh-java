@@ -5,7 +5,7 @@ import org.testng.Assert;
 import org.testng.annotations.*;
 import org.mockito.*;
 import wirelessmesh.domain.CustomerLocation;
-import domain.Devicedomain.*;
+import domain.Domain.*;
 import service.Wirelessmeshservice.*;
 
 import java.io.IOException;

@@ -16,7 +16,7 @@ public class WirelessMeshMain {
                 .registerEventSourcedEntity(
                         CustomerLocation.class,
                         Wirelessmeshservice.getDescriptor().findServiceByName("WirelessMeshService"),
-                        Devicedomain.getDescriptor())
+                        Domain.getDescriptor())
                 .start();
     }
 }
