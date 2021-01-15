@@ -228,12 +228,8 @@
      @EventHandler
      public void roomAssigned(RoomAssigned roomAssigned) {
          Device old = findDevice(roomAssigned.getDeviceId()).get();
-         Device device = Device.newBuilder()
-                 .setDeviceId(old.getDeviceId())
-                 .setCustomerLocationId(customerLocationId)
-                 .setActivated(old.getActivated())
+         Device device = old.toBuilder()
                  .setRoom(roomAssigned.getRoom())
-                 .setNightlightOn(old.getNightlightOn())
                  .build();
 
          replaceDevice(device);
@@ -279,11 +275,7 @@
      @EventHandler
      public void nightlightToggled(NightlightToggled nightlightToggled) {
          Device old = findDevice(nightlightToggled.getDeviceId()).get();
-         Device device = Device.newBuilder()
-                 .setDeviceId(old.getDeviceId())
-                 .setCustomerLocationId(customerLocationId)
-                 .setActivated(old.getActivated())
-                 .setRoom(old.getRoom())
+         Device device = old.toBuilder()
                  .setNightlightOn(nightlightToggled.getNightlightOn())
                  .build();
 
