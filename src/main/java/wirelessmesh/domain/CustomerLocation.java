@@ -64,11 +64,13 @@
              ctx.fail("Customer location already added");
          }
 
-         ctx.emit(CustomerLocationAdded.newBuilder()
+         CustomerLocationAdded event = CustomerLocationAdded.newBuilder()
                  .setCustomerLocationId(addCustomerLocationCommand.getCustomerLocationId())
                  .setAccessToken(addCustomerLocationCommand.getAccessToken())
-                 .build());
+                 .build();
 
+         ctx.emit(event);
+         new GooglePubsubClient().publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -100,10 +102,12 @@
              ctx.fail("Customer location already removed");
          }
 
-         ctx.emit(CustomerLocationRemoved.newBuilder()
+         CustomerLocationRemoved event = CustomerLocationRemoved.newBuilder()
                  .setCustomerLocationId(removeCustomerLocationCommand.getCustomerLocationId())
-                 .build());
+                 .build();
 
+         ctx.emit(event);
+         new GooglePubsubClient().publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -136,11 +140,13 @@
              ctx.fail("Device already activated");
          }
 
-         ctx.emit(DeviceActivated.newBuilder()
+         DeviceActivated event = DeviceActivated.newBuilder()
                  .setDeviceId(activateDeviceCommand.getDeviceId())
                  .setCustomerLocationId(customerLocationId)
-                 .build());
+                 .build();
 
+         ctx.emit(event);
+         new GooglePubsubClient().publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -176,10 +182,12 @@
              ctx.fail("Device does not exist");
          }
 
-         ctx.emit(DeviceRemoved.newBuilder()
+         DeviceRemoved event = DeviceRemoved.newBuilder()
                  .setDeviceId(removeDeviceCommand.getDeviceId())
-                 .setCustomerLocationId(customerLocationId).build());
+                 .setCustomerLocationId(customerLocationId).build();
 
+         ctx.emit(event);
+         new GooglePubsubClient().publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -211,11 +219,13 @@
              ctx.fail("Device does not exist");
          }
 
-         ctx.emit(RoomAssigned.newBuilder()
+         RoomAssigned event = RoomAssigned.newBuilder()
                  .setDeviceId(assignRoomCommand.getDeviceId())
                  .setCustomerLocationId(customerLocationId)
-                 .setRoom(assignRoomCommand.getRoom()).build());
+                 .setRoom(assignRoomCommand.getRoom()).build();
 
+         ctx.emit(event);
+         new GooglePubsubClient().publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -258,11 +268,13 @@
          DeviceClient client = new DeviceClient();
          client.toggleNightlight(accessToken, toggleNightlightCommand.getDeviceId());
 
-         ctx.emit(NightlightToggled.newBuilder()
+         NightlightToggled event = NightlightToggled.newBuilder()
                  .setDeviceId(toggleNightlightCommand.getDeviceId())
                  .setCustomerLocationId(customerLocationId)
-                 .setNightlightOn(!deviceMaybe.get().getNightlightOn()).build());
+                 .setNightlightOn(!deviceMaybe.get().getNightlightOn()).build();
 
+         ctx.emit(event);
+         new GooglePubsubClient().publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
