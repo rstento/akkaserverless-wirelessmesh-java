@@ -1,10 +1,11 @@
 package wirelessmesh;
 
-import service.Wirelessmeshservice;
-import wirelessmesh.domain.*;
+
 import io.cloudstate.javasupport.CloudState;
 
-import domain.*;
+import wirelessmesh.domain.CustomerLocationEntity;
+import wirelessmeshservice.Wirelessmeshservice;
+import wirelessmeshdomain.*;
 
 /**
  * This is the entry point into this user function.
@@ -14,9 +15,9 @@ public class WirelessMeshMain {
     public static void main(String... args) {
         new CloudState()
                 .registerEventSourcedEntity(
-                        CustomerLocation.class,
+                        CustomerLocationEntity.class,
                         Wirelessmeshservice.getDescriptor().findServiceByName("WirelessMeshService"),
-                        Domain.getDescriptor())
+                        Wirelessmeshdomain.getDescriptor())
                 .start();
     }
 }

@@ -4,9 +4,10 @@ import io.cloudstate.javasupport.eventsourced.CommandContext;
 import org.testng.Assert;
 import org.testng.annotations.*;
 import org.mockito.*;
-import wirelessmesh.domain.CustomerLocation;
-import domain.Domain.*;
-import service.Wirelessmeshservice.*;
+
+import wirelessmesh.domain.CustomerLocationEntity;
+import wirelessmeshdomain.Wirelessmeshdomain.*;
+import wirelessmeshservice.Wirelessmeshservice.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class CustomerLocationTest {
         createAndAddCustomerLocation();
     }
 
-    private void createAndActivateDevice(CustomerLocation customerLocation, String deviceId) {
+    private void createAndActivateDevice(CustomerLocationEntity customerLocation, String deviceId) {
         CommandContext context = Mockito.mock(CommandContext.class);
         DeviceActivated activated = DeviceActivated.newBuilder()
                 .setCustomerLocationId(customerLocationId)
@@ -45,45 +46,48 @@ public class CustomerLocationTest {
 
     @Test
     public void activateDevicesTest() {
-        CustomerLocation customerLocation = createAndAddCustomerLocation();
-        createAndActivateDevice(customerLocation, "deviceId1");
-        createAndActivateDevice(customerLocation, "deviceId2");
-        createAndActivateDevice(customerLocation, "deviceId3");
+        CustomerLocationEntity entity = createAndAddCustomerLocation();
+        createAndActivateDevice(entity, "deviceId1");
+        createAndActivateDevice(entity, "deviceId2");
+        createAndActivateDevice(entity, "deviceId3");
 
-        // Test get device.
-        GetDevicesCommand command = GetDevicesCommand.newBuilder().setCustomerLocationId(customerLocationId).build();
-        Devices devices = customerLocation.getDevices(command, null);
-        Assert.assertEquals(devices.getDeviceList().size(), 3);
-        Assert.assertEquals(devices.getDevice(0).getDeviceId(), "deviceId1");
-        Assert.assertEquals(devices.getDevice(1).getDeviceId(), "deviceId2");
-        Assert.assertEquals(devices.getDevice(2).getDeviceId(), "deviceId3");
+        // Test get.
+        GetCustomerLocationCommand command = GetCustomerLocationCommand.newBuilder()
+                .setCustomerLocationId(customerLocationId)
+                .build();
+
+        CustomerLocation customerLocation = entity.getCustomerLocation(command, null);
+        Assert.assertEquals(customerLocation.getDevicesList().size(), 3);
+        Assert.assertEquals(customerLocation.getDevices(0).getDeviceId(), "deviceId1");
+        Assert.assertEquals(customerLocation.getDevices(1).getDeviceId(), "deviceId2");
+        Assert.assertEquals(customerLocation.getDevices(2).getDeviceId(), "deviceId3");
     }
 
     @Test
     public void removeCustomerLocationTest() {
         CommandContext context = Mockito.mock(CommandContext.class);
-        CustomerLocation customerLocation = createAndAddCustomerLocation();
+        CustomerLocationEntity entity = createAndAddCustomerLocation();
         CustomerLocationRemoved removed = CustomerLocationRemoved.newBuilder()
                 .setCustomerLocationId(customerLocationId)
                 .build();
 
-        customerLocation.removeCustomerLocation(RemoveCustomerLocationCommand.newBuilder()
+        entity.removeCustomerLocation(RemoveCustomerLocationCommand.newBuilder()
             .setCustomerLocationId(customerLocationId).build(), context);
 
         Mockito.verify(context).emit(removed);
-        customerLocation.customerLocationRemoved(removed); // Simulate event callback to drive state change.
+        entity.customerLocationRemoved(removed); // Simulate event callback to drive state change.
         Mockito.reset(context);
-        customerLocation.getDevices(GetDevicesCommand.newBuilder().setCustomerLocationId(customerLocationId).build(), context);
+        entity.getCustomerLocation(GetCustomerLocationCommand.newBuilder().setCustomerLocationId(customerLocationId).build(), context);
         Mockito.verify(context).fail("customerLocation does not exist.");
     }
 
     @Test
     public void assignRoomTest() {
         CommandContext context = Mockito.mock(CommandContext.class);
-        CustomerLocation customerLocation = createAndAddCustomerLocation();
-        createAndActivateDevice(customerLocation, "deviceId1");
-        createAndActivateDevice(customerLocation, "deviceId2");
-        createAndActivateDevice(customerLocation, "deviceId3");
+        CustomerLocationEntity entity = createAndAddCustomerLocation();
+        createAndActivateDevice(entity, "deviceId1");
+        createAndActivateDevice(entity, "deviceId2");
+        createAndActivateDevice(entity, "deviceId3");
 
         RoomAssigned assigned = RoomAssigned.newBuilder()
                 .setDeviceId("deviceId2")
@@ -91,15 +95,15 @@ public class CustomerLocationTest {
                 .setRoom(room)
                 .build();
 
-        customerLocation.assignRoom(AssignRoomCommand.newBuilder()
+        entity.assignRoom(AssignRoomCommand.newBuilder()
                 .setDeviceId("deviceId2")
                 .setRoom(room)
                 .build()
                 , context);
 
         Mockito.verify(context).emit(assigned);
-        customerLocation.roomAssigned(assigned); // Simulate event callback to drive state change.
-        GetDevicesCommand command = GetDevicesCommand.newBuilder()
+        entity.roomAssigned(assigned); // Simulate event callback to drive state change.
+        GetCustomerLocationCommand command = GetCustomerLocationCommand.newBuilder()
                 .setCustomerLocationId(customerLocationId)
                 .build();
 
@@ -107,18 +111,21 @@ public class CustomerLocationTest {
         expected.add(defaultDevice("deviceId1"));
         expected.add(defaultDevice("deviceId2").toBuilder().setRoom(room).build());
         expected.add(defaultDevice("deviceId3"));
-        Devices devices = customerLocation.getDevices(command, context);
-        List<Device> sorted = devices.getDeviceList().stream().sorted(Comparator.comparing(Device::getDeviceId)).collect(toList());
+        CustomerLocation customerLocation = entity.getCustomerLocation(command, context);
+
+        List<Device> sorted = customerLocation.getDevicesList().stream().sorted(Comparator
+                .comparing(Device::getDeviceId)).collect(toList());
+
         Assert.assertEquals(sorted, expected);
     }
 
     @Test
     public void toggleNightlightTest() throws IOException {
         CommandContext context = Mockito.mock(CommandContext.class);
-        CustomerLocation customerLocation = createAndAddCustomerLocation();
-        createAndActivateDevice(customerLocation, "deviceId1");
-        createAndActivateDevice(customerLocation, "deviceId2");
-        createAndActivateDevice(customerLocation, "deviceId3");
+        CustomerLocationEntity entity = createAndAddCustomerLocation();
+        createAndActivateDevice(entity, "deviceId1");
+        createAndActivateDevice(entity, "deviceId2");
+        createAndActivateDevice(entity, "deviceId3");
 
         NightlightToggled toggled = NightlightToggled.newBuilder()
                 .setDeviceId("deviceId2")
@@ -126,14 +133,14 @@ public class CustomerLocationTest {
                 .setNightlightOn(true)
                 .build();
 
-        customerLocation.toggleNightlight(ToggleNightlightCommand.newBuilder()
+        entity.toggleNightlight(ToggleNightlightCommand.newBuilder()
                         .setDeviceId("deviceId2")
                         .build()
                 , context);
 
         Mockito.verify(context).emit(toggled);
-        customerLocation.nightlightToggled(toggled); // Simulate event callback to drive state change.
-        GetDevicesCommand command = GetDevicesCommand.newBuilder()
+        entity.nightlightToggled(toggled); // Simulate event callback to drive state change.
+        GetCustomerLocationCommand command = GetCustomerLocationCommand.newBuilder()
                 .setCustomerLocationId(customerLocationId)
                 .build();
 
@@ -141,14 +148,14 @@ public class CustomerLocationTest {
         expected.add(defaultDevice("deviceId1"));
         expected.add(defaultDevice("deviceId2").toBuilder().setNightlightOn(true).build());
         expected.add(defaultDevice("deviceId3"));
-        Devices devices = customerLocation.getDevices(command, context);
-        List<Device> sorted = devices.getDeviceList().stream().sorted(Comparator.comparing(Device::getDeviceId)).collect(toList());
+        CustomerLocation customerLocation = entity.getCustomerLocation(command, context);
+        List<Device> sorted = customerLocation.getDevicesList().stream().sorted(Comparator.comparing(Device::getDeviceId)).collect(toList());
         Assert.assertEquals(sorted, expected);
     }
 
-    private CustomerLocation createAndAddCustomerLocation() {
+    private CustomerLocationEntity createAndAddCustomerLocation() {
         CommandContext context = Mockito.mock(CommandContext.class);
-        CustomerLocation customerLocation = new CustomerLocation(customerLocationId);
+        CustomerLocationEntity customerLocation = new CustomerLocationEntity(customerLocationId);
 
         CustomerLocationAdded added = CustomerLocationAdded.newBuilder()
                 .setCustomerLocationId(customerLocationId)

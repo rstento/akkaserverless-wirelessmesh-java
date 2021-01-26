@@ -7,8 +7,8 @@
  import io.cloudstate.javasupport.eventsourced.EventHandler;
  import io.cloudstate.javasupport.eventsourced.EventSourcedEntity;
 
- import domain.Domain.*;
- import service.Wirelessmeshservice.*;
+ import wirelessmeshdomain.Wirelessmeshdomain.*;
+ import wirelessmeshservice.Wirelessmeshservice.*;
 
  import java.io.IOException;
  import java.util.ArrayList;
@@ -28,7 +28,7 @@
   * of security, analytics and simulation.
   */
  @EventSourcedEntity
- public class CustomerLocation {
+ public class CustomerLocationEntity {
 
      /**
       * This section contains the private state variables necessary for this entity.
@@ -48,7 +48,7 @@
       * Constructor.
       * @param customerLocationId The entity id will be the customerLocationId, the unique key for this entity.
       */
-     public CustomerLocation(@EntityId String customerLocationId) {
+     public CustomerLocationEntity(@EntityId String customerLocationId) {
          this.customerLocationId = customerLocationId;
      }
 
@@ -174,7 +174,7 @@
       */
      @CommandHandler
      public Empty removeDevice(RemoveDeviceCommand removeDeviceCommand, CommandContext ctx) {
-         if (removed) {
+         if (!added || removed) {
              ctx.fail("customerLocation does not exist.");
          }
 
@@ -296,17 +296,21 @@
 
      /**
       * This is the command handler geting the current state of the devices as defined in protobuf.
-      * @param getDevicesCommand the command message from protobuf
+      * @param GetCustomerLocationCommand the command message from protobuf
       * @param ctx the application context
       * @return Empty (unused)
       */
      @CommandHandler
-     public Devices getDevices(GetDevicesCommand getDevicesCommand, CommandContext ctx) {
+     public CustomerLocation getCustomerLocation(GetCustomerLocationCommand getCustomerLocationCommand, CommandContext ctx) {
          if (removed || !added) {
              ctx.fail("customerLocation does not exist.");
          }
 
-         return Devices.newBuilder().addAllDevice(devices).build();
+         return CustomerLocation.newBuilder().setCustomerLocationId(customerLocationId)
+                 .setAccessToken(accessToken)
+                 .setAdded(added)
+                 .setRemoved(removed)
+                 .addAllDevices(devices).build();
      }
 
      /**

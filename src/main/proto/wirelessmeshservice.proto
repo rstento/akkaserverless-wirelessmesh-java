@@ -7,7 +7,7 @@ import "cloudstate/entity_key.proto";
 /**
 * This is where we define our service and how the outside world will interact with our user function.
 **/
-package service;
+package wirelessmeshservice;
 
 /**
 * The following section contains the message definitions needed for the service below.
@@ -43,6 +43,10 @@ message ToggleNightlightCommand {
     string deviceId = 2;
 }
 
+message GetCustomerLocationCommand {
+    string customerLocationId = 1 [(.cloudstate.entity_key) = true];
+}
+
 message Device {
     string deviceId = 1;
     bool activated = 2;
@@ -51,12 +55,12 @@ message Device {
     bool nightlightOn = 5;
 }
 
-message Devices {
-    repeated Device device = 1;
-}
-
-message GetDevicesCommand {
-    string customerLocationId = 1 [(.cloudstate.entity_key) = true];
+message CustomerLocation {
+    string customerLocationId = 1;
+    string accessToken = 2;
+    bool added = 3;
+    bool removed = 4;
+    repeated Device devices = 5;
 }
 
 /**
@@ -99,9 +103,9 @@ service WirelessMeshService {
         };
     }
 
-    rpc GetDevices(GetDevicesCommand) returns (Devices) {
+    rpc GetCustomerLocation(GetCustomerLocationCommand) returns (CustomerLocation) {
         option (google.api.http) = {
-            get: "/wirelessmesh/get-devices",
+            get: "/wirelessmesh/get-customer-location",
         };
     }
 

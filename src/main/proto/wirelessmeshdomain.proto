@@ -3,7 +3,7 @@ syntax = "proto3";
 /**
 * This is where we define our domain, in this case the events that will be stored.
 **/
-package domain;
+package wirelessmeshdomain;
 
 message CustomerLocationAdded {
     string customerLocationId = 1;
