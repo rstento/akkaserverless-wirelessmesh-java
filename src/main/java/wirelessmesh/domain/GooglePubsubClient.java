@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GooglePubsubClient {
+public class GooglePubsubClient implements PubsubClient {
 
     public void publish(String topic, ByteString eventByteString) {
         TopicName topicName = TopicName.of("akkaserverless-wirelessmesh-java", topic); // todo: get from env

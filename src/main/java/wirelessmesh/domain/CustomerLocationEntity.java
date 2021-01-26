@@ -42,7 +42,9 @@
 
      private String accessToken = "";
 
-     List<Device> devices = new ArrayList<Device>();
+     private List<Device> devices = new ArrayList<Device>();
+
+     private PubsubClient pubsubClient = new NoopPubsubClient();
 
      /**
       * Constructor.
@@ -70,7 +72,7 @@
                  .build();
 
          ctx.emit(event);
-         new GooglePubsubClient().publish("customer-location", event.toByteString());
+         pubsubClient.publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -107,7 +109,7 @@
                  .build();
 
          ctx.emit(event);
-         new GooglePubsubClient().publish("customer-location", event.toByteString());
+         pubsubClient.publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -146,7 +148,7 @@
                  .build();
 
          ctx.emit(event);
-         new GooglePubsubClient().publish("customer-location", event.toByteString());
+         pubsubClient.publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -187,7 +189,7 @@
                  .setCustomerLocationId(customerLocationId).build();
 
          ctx.emit(event);
-         new GooglePubsubClient().publish("customer-location", event.toByteString());
+         pubsubClient.publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -225,7 +227,7 @@
                  .setRoom(assignRoomCommand.getRoom()).build();
 
          ctx.emit(event);
-         new GooglePubsubClient().publish("customer-location", event.toByteString());
+         pubsubClient.publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -274,7 +276,7 @@
                  .setNightlightOn(!deviceMaybe.get().getNightlightOn()).build();
 
          ctx.emit(event);
-         new GooglePubsubClient().publish("customer-location", event.toByteString());
+         pubsubClient.publish("customer-location", event.toByteString());
          return Empty.getDefaultInstance();
      }
 
