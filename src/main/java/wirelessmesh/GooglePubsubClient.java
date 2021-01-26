@@ -1,4 +1,4 @@
-package wirelessmesh.domain;
+package wirelessmesh;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -12,13 +12,13 @@ import java.util.logging.Logger;
 
 public class GooglePubsubClient implements PubsubClient {
 
-    public void publish(String topic, ByteString eventByteString) {
-        TopicName topicName = TopicName.of("akkaserverless-wirelessmesh-java", topic); // todo: get from env
+    public void publish(String projectId, String topicName, ByteString eventByteString) {
+        TopicName topic = TopicName.of(projectId, topicName);
         Publisher publisher = null;
 
         try {
             // Create a publisher instance with default settings bound to the topic
-            publisher = Publisher.newBuilder(topicName).build();
+            publisher = Publisher.newBuilder(topic).build();
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(eventByteString).build();
 
             // Once published, returns a server-assigned message id (unique within the topic)

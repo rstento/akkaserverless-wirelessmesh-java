@@ -55,8 +55,8 @@
                         <image>
                             <name>t3chi3/akkaserverless-wirelessmesh-java:%l</name>
                             <build>
-<!--                                <from>mybaseimage</from>-->
-                                <from>adoptopenjdk/openjdk8</from>
+                                <from>mybaseimage</from>
+<!--                                <from>adoptopenjdk/openjdk8</from>-->
                                 <tags>
                                     <tag>latest</tag>
                                 </tags>
