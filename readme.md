@@ -11,7 +11,7 @@ Features include:
 
 To help you get started with Akka Serverless, we've built some example apps that showcase the capabilities of the platform. This example application mimics a company that uses Akka Serverless to keep track of the wireless mesh devices their customers have installed and the devices connected to the meshes.
 
-In this example app you can interact with the devices, assign them to different rooms in the house, and turn them on or off. To make this example even more interactive, you can add an actual nightlight and switch the lights on or off. 
+In this example app you can interact with the devices, assign them to different rooms in the house, and turn them on or off. To make this example even more interactive, you can add an actual nightlight and switch the lights on or off.
 
 ## Prerequisites
 
@@ -21,13 +21,22 @@ To build and deploy this example application, you'll need to have:
 * Java 11 or higher installed
 * Maven 3.x or higher installed
 * The Docker CLI installed
-* A [service account](https://cloud.google.com/docs/authentication/production) that can connect to Google Cloud Pubsub 
+* A [service account](https://cloud.google.com/docs/authentication/production) that can connect to Google Cloud Pubsub
 
 ## Build, Deploy, and Test
 
-### Prepare your Google Cloud Pubsub 
+### Prepare your Google Cloud Pubsub
 
 To connect to Google Cloud Pubsub, the easiest method is authenticate using a service account. To create your [service account](https://cloud.google.com/docs/authentication/production#cloud-console). After creating your service account, you need to download the service account key as a JSON file called `mycreds.json`.
+
+To publish events to google pubsub locally, use the 'export PUBLISH_EVENTS='ON' environment variable. Make sure to add this environment variable when you deploy to akka serverless if you want to publish to google. You will also need to set the environment variable GOOGLE_PROJECT_ID and set that to your project id. You will need to create a the topic '"'wirelessmesh'
+
+examples to set local variables for testing (mac os):
+* export GOOGLE_APPLICATION_CREDENTIALS='/Users/memyselfandI/Downloads/mycreds.json'
+* export GOOGLE_PROJECT_ID='diesel-broccoli-266021'
+* export PUBLISH_EVENTS='ON'
+
+Be sure to set those 3 during your akkaserverless deploy as well.
 
 Next, you'll need to build a base image that contains the `mycreds.json` file and sets the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the service account key. You can build the docker image with by running:
 
@@ -73,7 +82,22 @@ _The above command will deploy your container to your default project with the n
 
 ### Testing your service
 
-TODO
+To test using Postman.
+* First install Postman, [found here](https://www.postman.com)
+* Assuming you have deployed to akkaserverless and exposed your service to 'winter-mountain-2372.us-east1.apps.akkaserverless.com'...
+* Create a Postman POST request to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/add-customer-location' with the json body '{"customerLocationId": "my-first-location", "accessToken": "my lifx access token if applicable"}'
+* You should see a response of '200(OK) {}', this will be the response of any POST
+* You can now create a GET request to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/get-customer-location?customerLocationId=my-first-location'
+* You should see a json response containing your customer location and no devices.
+* Create a POST request to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/activate-device' with the body '{"customerLocationId": "my-first-location", "deviceId": "my-first-device"}'
+* Create a POST requset to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/assign-room' with the body '{"customerLocationId": "my-first-location", "deviceId": "my-first-device", "room": "office"}'
+* Create a POST requset to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/toggle-nightlight' with the body '{"customerLocationId": "my-first-location", "deviceId": "my-first-device"}'
+* Rerun your get-customer-location request
+* You should see a json response with your customer location and a collection of your single device with the room assigned and the nightlight on
+* Create a POST request to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/remove-device' with the body '{"customerLocationId": "my-first-location", "deviceId": "my-first-device"}'
+* You should see a json response no longer containing any devices
+* Create a POST request to 'https://winter-mountain-2372.us-east1.apps.akkaserverless.com/wirelessmesh/remove-customer-location' with the body '{"customerLocationId": "my-first-location"}'
+* Rerun your get-customer-location request and you will see a server error since it no longer exists.
 
 ## Contributing
 

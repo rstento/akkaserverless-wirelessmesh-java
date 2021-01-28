@@ -7,7 +7,6 @@
  import io.cloudstate.javasupport.eventsourced.EventHandler;
  import io.cloudstate.javasupport.eventsourced.EventSourcedEntity;
 
- import wirelessmesh.GooglePubsubClient;
  import wirelessmesh.PubsubClient;
  import wirelessmeshdomain.Wirelessmeshdomain.*;
  import wirelessmeshservice.Wirelessmeshservice.*;
@@ -46,10 +45,7 @@
 
      private List<Device> devices = new ArrayList<Device>();
 
-     private PubsubClient pubsubClient = new GooglePubsubClient();
-
-     private String projectId = "wirelessmesh-1611694564489";
-     private String topicName = "projects/diesel-aegis-259011/topics/wirelessmesh";
+     private PubsubClient pubsubClient = new PubsubClient();
 
      /**
       * Constructor.
@@ -77,7 +73,7 @@
                  .build();
 
          ctx.emit(event);
-         pubsubClient.publish(projectId, topicName, event.toByteString());
+         pubsubClient.publish(event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -114,7 +110,7 @@
                  .build();
 
          ctx.emit(event);
-         pubsubClient.publish(projectId, topicName, event.toByteString());
+         pubsubClient.publish(event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -153,7 +149,7 @@
                  .build();
 
          ctx.emit(event);
-         pubsubClient.publish(projectId, topicName, event.toByteString());
+         pubsubClient.publish(event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -194,7 +190,7 @@
                  .setCustomerLocationId(customerLocationId).build();
 
          ctx.emit(event);
-         pubsubClient.publish(projectId, topicName, event.toByteString());
+         pubsubClient.publish(event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -232,7 +228,7 @@
                  .setRoom(assignRoomCommand.getRoom()).build();
 
          ctx.emit(event);
-         pubsubClient.publish(projectId, topicName, event.toByteString());
+         pubsubClient.publish(event.toByteString());
          return Empty.getDefaultInstance();
      }
 
@@ -281,7 +277,7 @@
                  .setNightlightOn(!deviceMaybe.get().getNightlightOn()).build();
 
          ctx.emit(event);
-         pubsubClient.publish(projectId, topicName, event.toByteString());
+         pubsubClient.publish(event.toByteString());
          return Empty.getDefaultInstance();
      }
 
