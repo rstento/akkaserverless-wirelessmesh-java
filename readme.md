@@ -25,6 +25,14 @@ To build and deploy this example application, you'll need to have:
 
 ## Build, Deploy, and Test
 
+### LIFX integration for toggling nightlight
+
+If you have an LIFX bulb and would like it to stand in for a wirelessmesh device and have it light on/off when you toggle the device nightlight, you simply have to:
+* Have an operational bulb
+* When you create your customer location, be sure to set the access token to the authorizaton token you requested with LIFX.
+* When you activate the device in this app, make sure it has the same device id as your bulb.
+* More information [here][https://api.developer.lifx.com]
+
 ### Prepare your Google Cloud Pubsub
 
 To connect to Google Cloud Pubsub, the easiest method is authenticate using a service account. To create your [service account](https://cloud.google.com/docs/authentication/production#cloud-console). After creating your service account, you need to download the service account key as a JSON file called `mycreds.json`.
