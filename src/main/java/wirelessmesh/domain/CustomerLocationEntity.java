@@ -7,6 +7,7 @@
  import io.cloudstate.javasupport.eventsourced.EventHandler;
  import io.cloudstate.javasupport.eventsourced.EventSourcedEntity;
 
+ import wirelessmesh.DeviceClient;
  import wirelessmesh.PubsubClient;
  import wirelessmeshdomain.Wirelessmeshdomain.*;
  import wirelessmeshservice.Wirelessmeshservice.*;

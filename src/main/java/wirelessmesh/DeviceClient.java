@@ -1,4 +1,4 @@
-package wirelessmesh.domain;
+package wirelessmesh;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.DataOutputStream;
