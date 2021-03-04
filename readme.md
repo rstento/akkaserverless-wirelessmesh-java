@@ -37,14 +37,13 @@ If you have an LIFX bulb and would like it to stand in for a wirelessmesh device
 
 To connect to Google Cloud Pubsub, the easiest method is authenticate using a service account. To create your [service account](https://cloud.google.com/docs/authentication/production#cloud-console). After creating your service account, you need to download the service account key as a JSON file called `mycreds.json`.
 
-To publish events to google pubsub locally, use the 'export PUBLISH_EVENTS='ON' environment variable. Make sure to add this environment variable when you deploy to akka serverless if you want to publish to google. You will also need to set the environment variable GOOGLE_PROJECT_ID and set that to your project id. You will need to create a the topic '"'wirelessmesh'
+To publish events to google pubsub locally, set the environment variable GOOGLE_PROJECT_ID to match your project id. You will need to create a the topic '"'wirelessmesh'
 
 examples to set local variables for testing (mac os):
 * export GOOGLE_APPLICATION_CREDENTIALS='/Users/memyselfandI/Downloads/mycreds.json'
 * export GOOGLE_PROJECT_ID='diesel-broccoli-266021'
-* export PUBLISH_EVENTS='ON'
 
-Be sure to set those 3 during your akkaserverless deploy as well.
+Be sure to set GOOGLE_PROJECT_ID during your akkaserverless deploy as well.
 
 Next, you'll need to build a base image that contains the `mycreds.json` file and sets the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the service account key. You can build the docker image with by running:
 

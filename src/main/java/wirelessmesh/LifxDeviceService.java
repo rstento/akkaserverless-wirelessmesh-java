@@ -8,7 +8,7 @@ import java.net.URL;
 /**
  * A LIFX restful client, for a bulb standing in for an addressable wireless mesh device.
  */
-public class DeviceClient {
+public class LifxDeviceService implements DeviceService {
 
     /**
      * This will set the device nightlight to the opposite value on the physical device (bulb).

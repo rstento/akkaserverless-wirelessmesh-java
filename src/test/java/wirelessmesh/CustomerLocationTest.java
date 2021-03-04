@@ -96,9 +96,10 @@ public class CustomerLocationTest {
                 .build();
 
         entity.assignRoom(AssignRoomCommand.newBuilder()
-                .setDeviceId("deviceId2")
-                .setRoom(room)
-                .build()
+                        .setDeviceId("deviceId2")
+                        .setCustomerLocationId(customerLocationId)
+                        .setRoom(room)
+                        .build()
                 , context);
 
         Mockito.verify(context).emit(assigned);
@@ -117,6 +118,7 @@ public class CustomerLocationTest {
                 .comparing(Device::getDeviceId)).collect(toList());
 
         Assert.assertEquals(sorted, expected);
+
     }
 
     @Test
@@ -135,6 +137,7 @@ public class CustomerLocationTest {
 
         entity.toggleNightlight(ToggleNightlightCommand.newBuilder()
                         .setDeviceId("deviceId2")
+                        .setCustomerLocationId(customerLocationId)
                         .build()
                 , context);
 

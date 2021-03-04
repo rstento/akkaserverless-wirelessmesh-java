@@ -1,6 +1,5 @@
 package wirelessmesh;
 
-
 import io.cloudstate.javasupport.CloudState;
 
 import wirelessmesh.domain.CustomerLocationEntity;
